@@ -1,0 +1,156 @@
+---
+title: "NueronaVal"
+output: html_document
+date: "2023-11-01"
+---
+
+```{r}
+# Cargar las bibliotecas 
+library(neuralnet)
+```
+
+```{r}
+# Importar los datos de entrenamiento y validación
+datos_entrenamiento <- read.csv("TablaEntrenamiento.csv")
+datos_validacion <- read.csv("TablaValidacion.csv")
+```
+
+```{r}
+# Definir la estructura de la red neuronal
+model <- neuralnet(DOC ~ Voltaje + Corriente + Frecuencia, data = datos_entrenamiento, hidden = c(2), linear.output = TRUE)
+
+model2 <- neuralnet(DOC ~ Corriente + Voltaje + Frecuencia, data = datos_entrenamiento, hidden = c(3), linear.output = TRUE)
+
+model3 <- neuralnet(DOC ~ Corriente + Voltaje + Frecuencia, data = datos_entrenamiento, hidden = c(2, 2), linear.output = TRUE)
+
+```
+
+
+
+```{r}
+#Ajustar la tasa de aprendizaje y el número de épocas
+model$learningrate <- 0.01  # Tasa de aprendizaje 
+model$algorithm <- "backprop"  # Algoritmo de entrenamiento 
+model$stepmax <- 1e6  # Número máximo de épocas 
+
+model2$learningrate <- 0.01  
+model2$algorithm <- "backprop"  
+model2$stepmax <- 1e6 
+
+model3$learningrate <- 0.01  
+model3$algorithm <- "backprop"  
+model3$stepmax <- 1e6  
+```
+
+
+
+
+```{r}
+# Realizar el entrenamiento
+model <- neuralnet(DOC ~ Voltaje + Corriente + Frecuencia, data = datos_entrenamiento, hidden = c(5, 5), linear.output = TRUE)
+
+model2 <- neuralnet(DOC ~ Corriente + Voltaje + Frecuencia, data = datos_entrenamiento, hidden = c(3), linear.output = TRUE)
+
+model3 <- neuralnet(DOC ~ Corriente + Voltaje + Frecuencia, data = datos_entrenamiento, hidden = c(2, 2), linear.output = TRUE)
+```
+
+
+
+
+```{r}
+# Realizar predicciones en los datos de validación
+predicciones <- predict(model, newdata = datos_validacion)
+predicciones2 <- predict(model2, newdata = datos_validacion)
+predicciones3 <- predict(model3, newdata = datos_validacion)
+```
+
+
+
+```{r}
+# Calcular el Error Cuadrático Medio (DOC)
+DOC_real <- datos_validacion$DOC
+DOC_predicho <- predicciones
+doc_mse <- mean((DOC_real - DOC_predicho)^2)
+
+DOC_predicho2 <- predicciones2
+doc_mse2 <- mean((DOC_real - DOC_predicho2)^2)
+
+DOC_predicho3 <- predicciones3
+doc_mse3 <- mean((DOC_real - DOC_predicho3)^2)
+
+```
+
+
+
+
+```{r}
+# Calcular el Error Porcentual Absoluto Medio (MAPE)
+mape <- mean(abs((DOC_real - DOC_predicho) / DOC_real)) * 100
+mape2 <- mean(abs((DOC_real - DOC_predicho2) / DOC_real)) * 100
+mape3 <- mean(abs((DOC_real - DOC_predicho3) / DOC_real)) * 100
+
+```
+
+
+
+```{r}
+# Crear una tabla de resultados
+resultados <- data.frame(DOC_real = DOC_real, DOC_predicho = DOC_predicho, Frecuencia = datos_validacion$Frecuencia, Voltaje = datos_validacion$Voltaje, Corriente = datos_validacion$Corriente)
+
+resultados2 <- data.frame(DOC_real = DOC_real, DOC_predicho = DOC_predicho2)
+
+resultados3 <- data.frame(DOC_real = DOC_real, DOC_predicho = DOC_predicho3)
+
+```
+
+
+
+
+```{r}
+# Mostrar los resultados
+# Crear una tabla de resultados con las columnas reordenadas
+resultados <- data.frame(Frecuencia = datos_validacion$Frecuencia,
+                         Voltaje = datos_validacion$Voltaje,
+                         Corriente = datos_validacion$Corriente,
+                         DOC_real = DOC_real,
+                         DOC_predicho = DOC_predicho,
+                         DOC_predicho2 = DOC_predicho2,
+                         DOC_predicho3 = DOC_predicho3)
+
+# Normalizar las columnas Frecuencia, Voltaje y Corriente en el dataframe resultados al rango [0, 1]
+normalize <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+
+resultados$Frecuencia <- normalize(resultados$Frecuencia)
+resultados$Voltaje <- normalize(resultados$Voltaje)
+resultados$Corriente <- normalize(resultados$Corriente)
+# Mostrar los resultados
+print(resultados)
+cat("Error Cuadrático Medio (DOC): ", doc_mse, "\n")
+cat("Error Porcentual Absoluto Medio (MAPE): ", mape, "%\n")
+
+cat("Error Cuadrático Medio (DOC) Red 2: ", doc_mse2, "\n")
+cat("Error Porcentual Absoluto Medio (MAPE) Red 2: ", mape2, "%\n")
+
+cat("Error Cuadrático Medio (DOC) Red 3: ", doc_mse3, "\n")
+cat("Error Porcentual Absoluto Medio (MAPE) Red 3: ", mape3, "%\n")
+```
+
+```{r}
+# Graficar la red neuronal
+plot(model, rep = "best", show.fit = TRUE)
+
+# Graficar la red neuronal de la Red 1
+plot(model2, rep = "best", show.fit = TRUE)
+
+# Graficar la red neuronal de la Red 2
+plot(model3, rep = "best", show.fit = TRUE)
+```
+
+```{r}
+
+```
+
+
+
